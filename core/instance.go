@@ -437,18 +437,16 @@ func (i *instance) createRunInstancesInput(instanceType string, price float64) *
 		TagSpecifications: i.generateTagsList(),
 	}
 
-	if i.IamInstanceProfile != nil {
-		retval.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
-			Arn: i.IamInstanceProfile.Arn,
-		}
-	}
 
 	if i.asg.LaunchTemplate != nil {
 		retval.LaunchTemplate = &ec2.LaunchTemplateSpecification{
-			LaunchTemplateId:   i.asg.LaunchTemplate.LaunchTemplateId,
-			LaunchTemplateName: i.asg.LaunchTemplate.LaunchTemplateName,
-		}
-	}
+      LaunchTemplateId: i.asg.LaunchTemplate.LaunchTemplateId,
+    }
+	} else if i.IamInstanceProfile != nil {
+    retval.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
+      Arn: i.IamInstanceProfile.Arn,
+    }
+  }
 
 	if i.asg.launchConfiguration != nil {
 		lc := i.asg.launchConfiguration
@@ -490,10 +488,6 @@ func (i *instance) generateTagsList() []*ec2.TagSpecification {
 		ResourceType: aws.String("instance"),
 		Tags: []*ec2.Tag{
 			{
-				Key:   aws.String("LaunchConfigurationName"),
-				Value: i.asg.LaunchConfigurationName,
-			},
-			{
 				Key:   aws.String("launched-by-autospotting"),
 				Value: aws.String("true"),
 			},
@@ -503,6 +497,20 @@ func (i *instance) generateTagsList() []*ec2.TagSpecification {
 			},
 		},
 	}
+
+  if i.asg.LaunchTemplate != nil {
+    tags.Tags = append(tags.Tags, &ec2.Tag{
+      Key:   aws.String("LaunchTemplateName"),
+      Value: i.asg.LaunchTemplate.LaunchTemplateName,
+    })
+  }
+
+  if i.asg.LaunchConfigurationName!= nil {
+    tags.Tags = append(tags.Tags, &ec2.Tag{
+      Key: aws.String("LaunchConfigurationName"),
+      Value: i.asg.LaunchConfigurationName,
+    })
+  }
 
 	for _, tag := range i.Tags {
 		if !strings.HasPrefix(*tag.Key, "aws:") {
