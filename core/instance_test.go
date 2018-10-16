@@ -1208,10 +1208,11 @@ func TestGenerateTagList(t *testing.T) {
 		name                     string
 		ASGName                  string
 		ASGLCName                string
+    ASGLTName                string
 		instanceTags             []*ec2.Tag
 		expectedTagSpecification []*ec2.TagSpecification
 	}{
-		{name: "no tags on original instance",
+		{name: "no tags on original instance launch configuration",
 			ASGLCName:    "testLC0",
 			ASGName:      "myASG",
 			instanceTags: []*ec2.Tag{},
@@ -1235,6 +1236,30 @@ func TestGenerateTagList(t *testing.T) {
 				},
 			},
 		},
+    {name: "no tags on original instance launch template",
+      ASGLTName:    "testLT0",
+      ASGName:      "myASG",
+      instanceTags: []*ec2.Tag{},
+      expectedTagSpecification: []*ec2.TagSpecification{
+        {
+          ResourceType: aws.String("instance"),
+          Tags: []*ec2.Tag{
+            {
+              Key:   aws.String("LaunchTemplateName"),
+              Value: aws.String("testLT0"),
+            },
+            {
+              Key:   aws.String("launched-by-autospotting"),
+              Value: aws.String("true"),
+            },
+            {
+              Key:   aws.String("launched-for-asg"),
+              Value: aws.String("myASG"),
+            },
+          },
+        },
+      },
+    },
 		{name: "Multiple tags on original instance",
 			ASGLCName: "testLC0",
 			ASGName:   "myASG",
